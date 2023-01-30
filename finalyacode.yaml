@@ -1,0 +1,33 @@
+# main pipeline yaml file
+You can use a YAML pipeline in Azure DevOps to deploy a task and reference variables 
+from another YAML file. Here's an example:
+---
+resources:
+  repositories:
+  - repository: variables
+    type: git
+    name: myproject/variables
+
+variables:
+  - template: variables/variables.yml
+    parameters:
+      env: 'dev'
+
+steps:
+- task: DeployTask@1
+  inputs:
+    # pick the variable value from the referenced yaml file
+    variableName: $(variableValue)
+
+---
+
+# variables.yml file (referenced in the main pipeline yaml)
+variables.yml file (referenced in the main pipeline yaml)
+---
+parameters:
+  env: ''
+
+variables:
+  variableValue: 'value_dev'
+  # add more environment-specific variables here
+
