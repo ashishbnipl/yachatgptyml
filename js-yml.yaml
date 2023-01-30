@@ -1,0 +1,54 @@
+# To define a value in a YAML pipeline with this script, you can pass the new value as an environment variable to the script, 
+#  and then use it to replace the existing value in the JSON file. 
+#  Here's an example of how you might modify the pipeline YAML file:
+
+ steps:
+- task: PowerShell@2
+  inputs:
+    targetType: 'filePath'
+    filePath: 'path/to/script.ps1'
+    arguments: '-jsonFilePath $(jsonFilePath) -yamlFilePath $(yamlFilePath) -propertyName $(propertyName) -subpropertyName $(subpropertyName) -newValue $(newValue)'
+  env:
+    jsonFilePath: 'path/to/json/file.json'
+    yamlFilePath: 'path/to/yaml/file.yaml'
+    propertyName: 'property'
+    subpropertyName: 'subproperty'
+    newValue: 'newValue'
+
+---
+Here is an example of a YAML pipeline to pick the value from another YAML pipeline in Azure DevOps:
+# Azure DevOps pipeline definition
+# Trigger this pipeline on a schedule or manually
+trigger:
+- none
+
+# Define variables to store the value from another pipeline
+variables:
+  pipelineId: 'pipeline_id' # Replace with actual pipeline ID
+  runId: 'run_id' # Replace with actual run ID
+  variableName: 'your_variable_name' # Replace with actual variable name
+
+# Checkout the latest version of the code
+steps:
+- task: PowerShell@2
+  displayName: 'Get the value from another pipeline'
+  inputs:
+    targetType: inline
+    script: |
+      $baseUri = "https://dev.azure.com/{organization}/{project}/_apis/pipelines/$(pipelineId)/runs/$(runId)?api-version=6.1"
+      $header = @{
+        Authorization = "Bearer $(System.AccessToken)"
+      }
+      $result = Invoke-RestMethod -Uri $baseUri -Method Get -Headers $header
+      $value = $result.variables.($variableName).value
+      Write-Output "##vso[task.setvariable variable=MY_VARIABLE;isOutput=true]$value"
+
+# Use the value in your pipeline
+- task: PowerShell@2
+  displayName: 'Use the value from another pipeline'
+  inputs:
+    targetType: inline
+    script: |
+      Write-Output "The value from another pipeline is $(MY_VARIABLE)"
+	  
+# Note: Replace the placeholders {organization}, {project}, pipeline_id, run_id, and your_variable_name with actual values.
