@@ -1,0 +1,61 @@
+# YAML pipeline to deploy a Docker image to ACR and deploy Helm chart
+# Here's a sample YAML pipeline for deploying a Docker image to Azure Container Registry (ACR) using the Docker image name 
+# retrieved from another YAML file, and deploying a Helm chart with that image name
+name: Deploy to ACR and Helm Chart
+
+resources:
+  - name: image-name-file
+    type: git
+    source:
+      uri: <repository-url>
+      branch: <branch-name>
+
+stages:
+  - name: Get Docker Image Name
+    jobs:
+      - name: Get Docker Image Name
+        plan:
+          - get: image-name-file
+            version: <version>
+          - task: Get Docker Image Name
+            config:
+              platform: linux
+              steps:
+                - name: Read Docker Image Name from YAML
+                  script: |
+                    # Read Docker Image Name from YAML file
+                    image_name=$(cat image-name-file/<yaml-file>.yaml | grep image_name | awk '{print $2}')
+                  env:
+                    IMAGE_NAME: $(image_name)
+
+  - name: Deploy Docker Image to ACR
+    dependsOn: Get Docker Image Name
+    jobs:
+      - name: Deploy Docker Image to ACR
+        plan:
+          - task: Deploy Docker Image to ACR
+            config:
+              platform: linux
+              steps:
+                - name: Login to ACR
+                  script: |
+                    # Login to ACR
+                    az acr login --name <acr-name>
+                - name: Push Docker Image to ACR
+                  script: |
+                    # Push Docker Image to ACR
+                    docker push <acr-name>.azurecr.io/$(IMAGE_NAME)
+
+  - name: Deploy Helm Chart
+    dependsOn: Deploy Docker Image to ACR
+    jobs:
+      - name: Deploy Helm Chart
+        plan:
+          - task: Deploy Helm Chart
+            config:
+              platform: linux
+              steps:
+                - name: Deploy Helm Chart
+                  script: |
+                    # Deploy Helm Chart
+                    helm install <chart-name> <acr-name>.azurecr.io/$(IMAGE_NAME)

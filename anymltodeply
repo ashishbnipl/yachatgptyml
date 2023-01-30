@@ -1,0 +1,65 @@
+# Here is an example of a YAML pipeline for deploying a Docker image to a container registry, 
+# where the Docker image name is retrieved from another pipeline:
+
+# Azure DevOps pipeline definition
+# Trigger this pipeline on a schedule or manually
+trigger:
+- none
+
+# Define variables to store the value from another pipeline
+variables:
+  pipelineId: 'pipeline_id' # Replace with actual pipeline ID
+  runId: 'run_id' # Replace with actual run ID
+  variableName: 'your_variable_name' # Replace with actual variable name
+
+# Checkout the latest version of the code
+steps:
+- task: PowerShell@2
+  displayName: 'Get the value from another pipeline'
+  inputs:
+    targetType: inline
+    script: |
+      $baseUri = "https://dev.azure.com/{organization}/{project}/_apis/pipelines/$(pipelineId)/runs/$(runId)?api-version=6.1"
+      $header = @{
+        Authorization = "Bearer $(System.AccessToken)"
+      }
+      $result = Invoke-RestMethod -Uri $baseUri -Method Get -Headers $header
+      $value = $result.variables.($variableName).value
+      Write-Output "##vso[task.setvariable variable=IMAGE_NAME;isOutput=true]$value"
+
+# Build and push Docker image
+- task: Docker@2
+  displayName: 'Build and push Docker image'
+  inputs:
+    command: buildAndPush
+    containerRegistry: 'docker_registry_connection' # Replace with actual Docker registry connection name
+    repository: $(IMAGE_NAME)
+    tags: |
+      latest
+
+# Deploy the Docker image to a container environment
+- task: KubernetesManifest@0
+  displayName: 'Deploy the Docker image to a container environment'
+  inputs:
+    command: deploy
+    manifests: |
+      apiVersion: apps/v1
+      kind: Deployment
+      metadata:
+        name: my-deployment
+      spec:
+        replicas: 3
+        selector:
+          matchLabels:
+            app: my-app
+        template:
+          metadata:
+            labels:
+              app: my-app
+          spec:
+            containers:
+            - name: my-container
+              image: $(IMAGE_NAME):latest
+              ports:
+              - containerPort: 80
+    namespace: default
