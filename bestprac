@@ -1,0 +1,16 @@
+To create an Azure DevOps (ADO) service connection using a service principle, you can follow these best practices:
+
+Use a dedicated service principle: Create a separate service principle for each ADO service connection. This way, you can control the permissions and limit the scope of the service principle's access.
+
+Grant least privilege: When creating a service principle, grant the minimum permissions required for the service connection to function. Avoid granting elevated permissions unless absolutely necessary.
+
+Use role-based access control (RBAC): Use RBAC to manage the permissions of the service principle. This allows you to control which Azure resources the service principle can access and what actions it can perform.
+
+Store secrets securely: Store the client ID and client secret of the service principle securely, such as using Azure Key Vault. Do not store the secrets in plain text or check them into version control.
+
+Monitor and review: Regularly monitor and review the ADO service connections and the associated service principles. This helps you to identify and mitigate security risks.
+
+By following these best practices, you can ensure that your ADO service connections using service principles are secure, well-managed, and efficient.
+
+
+
