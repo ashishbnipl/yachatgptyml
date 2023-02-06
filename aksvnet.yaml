@@ -1,0 +1,71 @@
+provider "azurerm" {
+  version = "2.0"
+}
+
+locals {
+  resource_group_name = "aks-cluster-rg"
+  aks_cluster_name    = "aks-cluster"
+  location            = "westus2"
+}
+
+resource "azurerm_resource_group" "aks_cluster" {
+  name     = local.resource_group_name
+  location = local.location
+}
+
+resource "azurerm_kubernetes_cluster" "aks_cluster" {
+  name                = local.aks_cluster_name
+  location            = local.location
+  resource_group_name = azurerm_resource_group.aks_cluster.name
+
+  default_node_pool {
+    name            = "default"
+    node_count      = 3
+    vm_size         = "Standard_D2_v2"
+    os_disk_size_gb = 30
+  }
+
+  additional_node_pool {
+    name            = "large"
+    node_count      = 3
+    vm_size         = "Standard_D4s_v3"
+    os_disk_size_gb = 30
+  }
+}
+
+---
+provider "azurerm" {
+  version = "2.0"
+}
+
+locals {
+  resource_group_name = "aks-cluster-rg"
+  aks_cluster_name    = "aks-cluster"
+  location            = "westus2"
+}
+
+resource "azurerm_resource_group" "aks_cluster" {
+  name     = local.resource_group_name
+  location = local.location
+}
+
+resource "azurerm_kubernetes_cluster" "aks_cluster" {
+  name                = local.aks_cluster_name
+  location            = local.location
+  resource_group_name = azurerm_resource_group.aks_cluster.name
+  enable_rbac         = true
+
+  default_node_pool {
+    name            = "default"
+    node_count      = 3
+    vm_size         = "Standard_D2_v2"
+    os_disk_size_gb = 30
+  }
+
+  additional_node_pool {
+    name            = "large"
+    node_count      = 3
+    vm_size         = "Standard_D4s_v3"
+    os_disk_size_gb = 30
+  }
+}
