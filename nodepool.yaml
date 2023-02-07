@@ -1,0 +1,169 @@
+provider "azurerm" {
+  version = "2.0"
+}
+
+# define the VNet and subnet
+resource "azurerm_virtual_network" "example_vnet" {
+  name                = "existing-vnet"
+  address_space       = ["10.0.0.0/16"]
+  location            = "westeurope"
+}
+
+resource "azurerm_subnet" "example_subnet" {
+  name                 = "existing-subnet"
+  virtual_network_name = azurerm_virtual_network.example_vnet.name
+  address_prefix       = "10.0.2.0/24"
+}
+
+# define the AKS cluster
+module "aks" {
+  source  = "Azure/aks/azurerm"
+  version = "2.0.0"
+
+  cluster_name     = "my-aks-cluster"
+  resource_group   = "my-aks-rg"
+  location         = "westeurope"
+  kubernetes_version = "1.19.9"
+
+  linux_profile {
+    admin_username = "aksuser"
+
+    ssh_key {
+      key_data = "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQCqaZoyiz1qbdOQ8xEf6uEu1cCwYowo5FHtsBhqLoDnnp7KUTEBN+L2NxRIfQ781rxV6Iq5jSav6b2Q8z5KiseOlvKA/RF2wqU0UPYqQviQhLmW6THTpmrv/YkUCuzxDpsH7DUDhZcwySLKVVe0Qm3+5N2Ta6UYH3lsDf9R9wTP2K/+vAnflKebuypNlmocIvakFWoZda18FOmsOoIVXQ8HWFNCuw9ZCunMSN62QGamCe3dL5cXlkgHYv7ekJE15IA9aOJcM7e90oeTqo+7HTcWfdu0qQqPWY5ujyMw/llas8tsXY85LFqRnr3gJ02bAscjc477+X+j/gkpFoN1L johndoe@email.com"
+    }
+  }
+
+  network_profile {
+    network_plugin = "azure"
+
+    service_cidr = "10.0.0.0/16"
+    dns_service_ip = "10.0.0.10"
+
+    docker_bridge_cidr = "172.17.0.1/16"
+  }
+
+  agent_pool_profile {
+    name    = "default"
+    count   = 3
+    vm_size = "Standard_D2s_v3"
+
+    vnet_subnet_id = azurerm_subnet.example_subnet.id
+  }
+}
+---
+provider "azurerm" {
+  version = "2.0"
+}
+
+# Reference the existing VNet and subnet
+data "azurerm_virtual_network" "existing_vnet" {
+  name                = "existing-vnet"
+  resource_group_name = "existing-vnet-rg"
+}
+
+data "azurerm_subnet" "existing_subnet" {
+  name                 = "existing-subnet"
+  virtual_network_name = data.azurerm_virtual_network.existing_vnet.name
+  resource_group_name  = data.azurerm_virtual_network.existing_vnet.resource_group_name
+}
+
+# Deploy the AKS cluster
+module "aks" {
+  source  = "Azure/aks/azurerm"
+  version = "2.0.0"
+
+  cluster_name     = "my-aks-cluster"
+  resource_group   = "my-aks-rg"
+  location         = "westeurope"
+  kubernetes_version = "1.19.9"
+
+  linux_profile {
+    admin_username = "aksuser"
+
+    ssh_key {
+      key_data = "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQCqaZoyiz1qbdOQ8xEf6uEu1cCwYowo5FHtsBhqLoDnnp7KUTEBN+L2NxRIfQ781rxV6Iq5jSav6b2Q8z5KiseOlvKA/RF2wqU0UPYqQviQhLmW6THTpmrv/YkUCuzxDpsH7DUDhZcwySLKVVe0Qm3+5N2Ta6UYH3lsDf9R9wTP2K/+vAnflKebuypNlmocIvakFWoZda18FOmsOoIVXQ8HWFNCuw9ZCunMSN62QGamCe3dL5cXlkgHYv7ekJE15IA9aOJcM7e90oeTqo+7HTcWfdu0qQqPWY5ujyMw/llas8tsXY85LFqRnr3gJ02bAscjc477+X+j/gkpFoN1L johndoe@email.com"
+    }
+  }
+
+  network_profile {
+    network_plugin = "azure"
+
+    service_cidr = "10.0.0.0/16"
+    dns_service_ip = "10.0.0.10"
+
+    docker_bridge_cidr = "172.17.0.1/16"
+  }
+
+  agent_pool_profile {
+    name    = "default"
+    count   = 3
+    vm_size = "Standard_D2s_v3"
+
+    vnet_subnet_id = data.azurerm_subnet.existing_subnet.id
+  }
+}
+---
+resource "azurerm_kubernetes_cluster_node_pool" "aks_pool" {
+  name                = "aks-pool"
+  kubernetes_cluster_id = azurerm_kubernetes_cluster.aks_cluster.id
+  vm_size             = "Standard_D2s_v3"
+  node_count          = 3
+
+  os_disk_size_gb = 30
+  vnet_subnet_id  = azurerm_subnet.subnet.id
+
+  tags = {
+    Terraform   = "true"
+    Environment = "production"
+  }
+}
+---
+variable "node_pool_count" {
+  type    = number
+  default = 2
+}
+
+resource "azurerm_kubernetes_cluster_node_pool" "aks_pools" {
+  count               = var.node_pool_count
+  name                = "aks-pool-${count.index}"
+  kubernetes_cluster_id = azurerm_kubernetes_cluster.aks_cluster.id
+  vm_size             = "Standard_D2s_v3"
+  node_count          = 3
+
+  os_disk_size_gb = 30
+  vnet_subnet_id  = azurerm_subnet.subnet.id
+
+  tags = {
+    Terraform   = "true"
+    Environment = "production"
+  }
+}
+---
+variable "node_pool_names" {
+  type    = list(string)
+  default = ["pool-a", "pool-b"]
+}
+
+variable "node_pool_vm_sizes" {
+  type    = list(string)
+  default = ["Standard_D2s_v3", "Standard_D4s_v3"]
+}
+
+resource "azurerm_kubernetes_cluster_node_pool" "aks_pools" {
+  count               = length(var.node_pool_names)
+  name                = var.node_pool_names[count.index]
+  kubernetes_cluster_id = azurerm_kubernetes_cluster.aks_cluster.id
+  vm_size             = var.node_pool_vm_sizes[count.index]
+  node_count          = 3
+
+  os_disk_size_gb = 30
+  vnet_subnet_id  = azurerm_subnet.subnet.id
+
+  tags = {
+    Terraform   = "true"
+    Environment = "production"
+  }
+}
+
+---
+
