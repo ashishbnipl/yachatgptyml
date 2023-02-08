@@ -166,4 +166,44 @@ resource "azurerm_kubernetes_cluster_node_pool" "aks_pools" {
 }
 
 ---
+variable "node_pool_names" {
+  type    = list(string)
+  default = ["pool-a", "pool-b", "pool-c"]
+}
 
+variable "node_pool_vm_sizes" {
+  type    = list(string)
+  default = ["Standard_D2s_v3", "Standard_D4s_v3", "Standard_D8s_v3"]
+}
+
+variable "node_pool_node_counts" {
+  type    = list(number)
+  default = [3, 5, 7]
+}
+
+variable "node_pool_types" {
+  type    = list(string)
+  default = ["Regular", "Regular", "Spot"]
+}
+
+resource "azurerm_kubernetes_cluster_node_pool" "aks_pools" {
+  count               = length(var.node_pool_names)
+  name                = var.node_pool_names[count.index]
+  kubernetes_cluster_id = azurerm_kubernetes_cluster.aks_cluster.id
+  vm_size             = var.node_pool_vm_sizes[count.index]
+  node_count          = var.node_pool_node_counts[count.index]
+  type                = var.node_pool_types[count.index]
+  os_disk_size_gb     = 30
+  vnet_subnet_id      = azurerm_subnet.subnet.id
+
+  tags = {
+    Terraform   = "true"
+    Environment = "production"
+  }
+
+  spot_config {
+    max_price = 1.5
+    placement_group_id = ""
+    readiness_option = "Pause"
+  }
+}
