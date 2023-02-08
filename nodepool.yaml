@@ -207,3 +207,7 @@ resource "azurerm_kubernetes_cluster_node_pool" "aks_pools" {
     readiness_option = "Pause"
   }
 }
+---
+az aks show --name <aks_cluster_name> --resource-group <resource_group_name> --query "networkProfile.networkPlugin" --query "networkProfile.vnetSubnetId" --output table
+---
+az aks show --name <aks_cluster_name> --resource-group <resource_group_name> --query "networkProfile.networkPlugin" --output table
