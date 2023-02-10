@@ -82,3 +82,95 @@ resource "azurerm_kubernetes_cluster_node_pool" "node_pools" {
     auto_scaling_config {
       min_count = 1
      
+
+
+----
+
+provider "azurerm" {
+    version = "2.0"
+  }
+  
+  variable "resource_group_name" {
+    type        = string
+    default     = "aks-spot-node-pools-rg"
+  }
+  
+  variable "cluster_name" {
+    type        = string
+    default     = "aks-spot-cluster"
+  }
+  
+  variable "location" {
+    type        = string
+    default     = "westus2"
+  }
+  
+  variable "node_pool_names" {
+    type        = list(string)
+    default     = ["spot-pool-1", "spot-pool-2"]
+  }
+  
+  variable "node_pool_counts" {
+    type        = list(number)
+    default     = [1, 1]
+  }
+  
+  variable "node_pool_sizes" {
+    type        = list(string)
+    default     = ["Standard_D2_v2", "Standard_D2_v2"]
+  }
+  
+  variable "os_disk_sizes" {
+    type        = list(number)
+    default     = [30, 30]
+  }
+  
+  resource "azurerm_resource_group" "rg" {
+    name     = var.resource_group_name
+    location = var.location
+  }
+  
+  resource "azurerm_kubernetes_cluster" "cluster" {
+    name                = var.cluster_name
+    location            = var.location
+    resource_group_name = azurerm_resource_group.rg.name
+    linux_profile {
+      admin_username = "azureuser"
+      ssh_key {
+        key_data = file("~/.ssh/id_rsa.pub")
+      }
+    }
+  
+    default_node_pool {
+      name           = "default"
+      node_count     = 1
+      vm_size        = "Standard_D2_v2"
+      os_disk_size_gb = 30
+    }
+  }
+  
+  resource "azurerm_kubernetes_cluster_node_pool" "spot-pool" {
+    count = length(var.node_pool_names)
+  
+    name                = var.node_pool_names[count.index]
+    location            = var.location
+    resource_group_name = azurerm_resource_group.rg.name
+    cluster_name        = azurerm_kubernetes_cluster.cluster.name
+    node_count          = var.node_pool_counts[count.index]
+    vm_size             = var.node_pool_sizes[count.index]
+    os_disk_size_gb     = var.os_disk_sizes[count.index]
+  
+    node_taints = [
+      "Preemptible=true:NoSchedule",
+    ]
+  
+    node_labels = {
+      "beta.kubernetes.io/instance-type" = "spot"
+    }
+  
+    auto_scaling_config {
+      min_count = 1
+      max_count = 10
+    }
+  }
+  
