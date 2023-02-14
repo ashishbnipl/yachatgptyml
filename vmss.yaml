@@ -1,0 +1,96 @@
+variable "resource_group_name" {
+  description = "Name of the resource group."
+}
+
+variable "vmss_name" {
+  description = "Name of the virtual machine scale set."
+}
+
+variable "instance_count" {
+  description = "Number of virtual machine instances in the scale set."
+  default = 2
+}
+
+variable "location" {
+  description = "Location of the resource group."
+  default = "East US"
+}
+
+variable "vnet_name" {
+  description = "Name of the existing virtual network."
+}
+
+variable "subnet_name" {
+  description = "Name of the existing subnet."
+}
+
+resource "azurerm_resource_group" "example" {
+  name     = var.resource_group_name
+  location = var.location
+}
+
+data "azurerm_subnet" "example" {
+  name                 = var.subnet_name
+  virtual_network_name = var.vnet_name
+  resource_group_name  = var.resource_group_name
+}
+
+resource "azurerm_lb" "example" {
+  name                = "example-lb"
+  location            = azurerm_resource_group.example.location
+  resource_group_name = azurerm_resource_group.example.name
+}
+
+resource "azurerm_lb_backend_address_pool" "example" {
+  name                = "example-beap"
+  loadbalancer_id     = azurerm_lb.example.id
+  resource_group_name = azurerm_resource_group.example.name
+}
+
+resource "azurerm_availability_set" "example" {
+  name                = "example-avset"
+  location            = azurerm_resource_group.example.location
+  resource_group_name = azurerm_resource_group.example.name
+}
+
+resource "azurerm_virtual_machine_scale_set" "example" {
+  name                = var.vmss_name
+  location            = azurerm_resource_group.example.location
+  resource_group_name = azurerm_resource_group.example.name
+  sku                 = "Standard_D2_v2"
+  instances           = var.instance_count
+
+  upgrade_mode = "Automatic"
+  overprovision = true
+
+  network_interface {
+    name                          = "example-nic"
+    ip_configuration_name         = "example-ipconfig"
+    primary                       = true
+    load_balancer_backend_address_pool_ids = [azurerm_lb_backend_address_pool.example.id]
+    subnet_id                     = data.azurerm_subnet.example.id
+  }
+
+  storage_profile {
+    image_reference {
+      publisher = "Canonical"
+      offer     = "UbuntuServer"
+      sku       = "16.04-LTS"
+      version   = "latest"
+    }
+
+    os_disk {
+      name              = "example-osdisk"
+      caching           = "ReadWrite"
+      storage_account_type = "Standard_LRS"
+    }
+  }
+
+  os_profile {
+    computer_name_prefix = "examplevm"
+    admin_username       = "adminuser"
+    admin_password       = "ComplexPassword123"
+  }
+
+  availability_set_id = azurerm_availability_set.example.id
+}
