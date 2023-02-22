@@ -1,0 +1,25 @@
+#cloud-config
+package_update: true
+package_upgrade: true
+packages:
+  - apt-transport-https
+  - ca-certificates
+  - curl
+  - docker.io
+  - maven
+runcmd:
+  #Installing Azure Cli
+  - 'curl -sL https://aka.ms/InstallAzureCLIDeb | bash'
+  #Configuring maven
+
+  #Configuring docker permissions
+  - 'chmod 777 /var/run/docker.sock'
+  #Installing kubernetes-cli
+  - 'curl -fsSLo /usr/share/keyrings/kubernetes-archive-keyring.gpg https://packages.cloud.google.com/apt/doc/apt-key.gpg'
+  - 'echo "deb [signed-by=/usr/share/keyrings/kubernetes-archive-keyring.gpg] https://apt.kubernetes.io/ kubernetes-xenial main" | sudo tee /etc/apt/sources.list.d/kubernetes.list'
+  - 'curl -s https://packages.cloud.google.com/apt/doc/apt-key.gpg | sudo apt-key add -'
+  - 'apt update'
+  - 'apt install -y kubectl'
+  #Installing Helm
+  - 'curl -sL get_helm.sh https://raw.githubusercontent.com/helm/helm/master/scripts/get-helm-3 | bash'
+final_message: "The system is finally up, after $UPTIME seconds"
