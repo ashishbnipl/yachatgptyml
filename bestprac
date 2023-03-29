@@ -14,3 +14,25 @@ By following these best practices, you can ensure that your ADO service connecti
 
 
 
+Deployment: Verify that the application is deployed correctly in the new Kubernetes cluster and that all pods are up and running.
+
+Connectivity: Ensure that the application can connect to all the necessary services and resources in the new cluster.
+
+Load balancing: Verify that the load balancer is correctly configured in the new cluster and that it is distributing traffic evenly across all pods.
+
+Scaling: Test the application's ability to scale up and down in response to changes in demand.
+
+Security: Verify that all security measures, such as network policies and RBAC, are correctly configured in the new cluster.
+
+Configuration: Ensure that all configuration settings, such as environment variables and configuration files, are correctly set up in the new cluster.
+
+Monitoring and logging: Test that monitoring and logging are set up correctly in the new cluster and that logs and metrics are being collected and stored.
+
+Disaster recovery: Test the application's ability to recover from disasters, such as a node failure or a network outage.
+
+Integration with other services: Verify that the application can still integrate with other services and resources, such as databases or message queues, in the new cluster.
+
+User acceptance: Finally, test the application from the user's perspective to ensure that it behaves as expected and meets all user requirements in the new cluster.
+
+
+
