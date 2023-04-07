@@ -34,5 +34,46 @@ Integration with other services: Verify that the application can still integrate
 
 User acceptance: Finally, test the application from the user's perspective to ensure that it behaves as expected and meets all user requirements in the new cluster.
 
+Deployment:
+Verify that all the required containers, volumes, and config maps are present in the new cluster.
+Check that the deployment has the correct number of replicas and is running on the correct nodes.
+Verify that the pod initialization and readiness probes are correctly configured and working as expected.
+Connectivity:
+Ensure that all network policies are correctly set up and allow the required traffic between pods and services.
+Check that the service discovery mechanisms, such as DNS or Kubernetes service discovery, are correctly configured.
+Verify that the application can connect to any external resources it needs, such as databases or APIs.
+Load balancing:
+Test that the load balancer is distributing traffic evenly across all pods.
+Verify that the load balancer is correctly configured to use the correct ports and protocols for the application.
+Ensure that the load balancer is able to handle high traffic volumes and scaling events.
+Scaling:
+Test that the application scales up and down correctly in response to changes in demand.
+Verify that the autoscaling mechanisms, such as Horizontal Pod Autoscaling (HPA), are correctly configured and working as expected.
+Test that the scaling events do not cause any disruptions or downtime to the application.
+Security:
+Ensure that all network policies are correctly configured to allow only the required traffic between pods and services.
+Verify that RBAC policies are correctly set up to limit access to sensitive resources and prevent unauthorized access.
+Test that any security measures, such as TLS encryption or secrets management, are correctly set up in the new cluster.
+Configuration:
+Ensure that all configuration settings, such as environment variables and configuration files, are correctly set up in the new cluster.
+Verify that the application is using the correct configuration settings for the new cluster, such as database or API endpoints.
+Test that any changes to the configuration do not cause any disruptions or downtime to the application.
+Monitoring and logging:
+Test that the monitoring and logging tools are correctly set up in the new cluster and are collecting the required metrics and logs.
+Verify that any alerts or notifications are correctly configured and working as expected.
+Test that any changes to the monitoring or logging setup do not cause any disruptions or downtime to the application.
+Disaster recovery:
+Test that the application can recover from disasters, such as a node failure or a network outage, in the new cluster.
+Verify that any disaster recovery mechanisms, such as backup and restore processes, are correctly set up and working as expected.
+Test that any failover or recovery events do not cause any disruptions or downtime to the application.
+Integration with other services:
+Ensure that the application can still integrate with other services and resources, such as databases or message queues, in the new cluster.
+Test that any changes to the integration setup, such as new API endpoints or authentication mechanisms, do not cause any disruptions or downtime to the application.
+Verify that any dependencies on external services are correctly configured and working as expected in the new cluster.
+User acceptance:
+Test the application from the user's perspective to ensure that it behaves as expected and meets all user requirements in the new cluster.
+Verify that any user-facing features, such as APIs or UIs, are correctly set up and working as expected.
+Test that any changes to the application do not cause any disruptions or downtime to the end users.
+
 
 
